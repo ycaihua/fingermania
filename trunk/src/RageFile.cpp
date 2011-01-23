@@ -1,10 +1,3 @@
-/*
- * This provides an interface to open files in RageFileManager's namespace
- * This is just a simple RageFileBasic wrapper on top of another RageFileBasic;
- * when a file is open, is acts like the underlying RageFileBasic, except that
- * a few extra sanity checks are made to check file modes.  
- */
-
 #include "global.h"
 #include "RageFileBasic.h"
 #include "RageFile.h"
@@ -15,11 +8,10 @@ RageFile::RageFile()
 {
 	m_File = NULL;
 }
-	
+
 RageFile::RageFile( const RageFile &cpy ):
 	RageFileBasic( cpy )
 {
-	/* This will copy the file driver, including its internal file pointer. */
 	m_File = cpy.m_File->Copy();
 	m_Path = cpy.m_Path;
 	m_Mode = cpy.m_Mode;
@@ -214,222 +206,192 @@ int RageFile::Seek( int offset, int whence )
 	return m_File->Seek( offset, whence );
 }
 
-void FileReading::ReadBytes( RageFileBasic &f, void *buf, int size, RString &sError )
+void FileReading::ReadBytes(RageFileBasic& f, void* buf, int size, RString& sError)
 {
-	if( sError.size() != 0 )
+	if (sError.size() != 0)
 		return;
 
-	int ret = f.Read( buf, size );
-	if( ret == -1 )
+	int ret = f.Read(buf, size);
+	if (ret == -1)
 		sError = f.GetError();
-	else if( ret < size )
+	else if (ret < size)
 		sError = "Unexpected end of file";
 }
 
-RString FileReading::ReadString( RageFileBasic &f, int size, RString &sError )
+RString FileReading::ReadString(RageFileBasic& f, int size, RString& sError)
 {
-	if( sError.size() != 0 )
+	if (sError.size() != 0)
 		return RString();
 
 	RString sBuf;
-	int ret = f.Read( sBuf, size );
-	if( ret == -1 )
+	int ret = f.Read(sBuf, size);
+	if (ret == -1)
 		sError = f.GetError();
-	else if( ret < size )
+	else if (ret < size)
 		sError = "Unexpected end of file";
 	return sBuf;
 }
 
-void FileReading::SkipBytes( RageFileBasic &f, int iBytes, RString &sError )
+void FileReading::SkipBytes(RageFileBasic& f, int iBytes, RString& sError)
 {
-	if( sError.size() != 0 )
+	if (sError.size() != 0)
 		return;
 
 	iBytes += f.Tell();
-	FileReading::Seek( f, iBytes, sError );
+	FileReading::Seek(f, iBytes, sError);
 }
 
-void FileReading::Seek( RageFileBasic &f, int iOffset, RString &sError )
+void FileReading::Seek(RageFileBasic& f, int iOffset, RString& sError)
 {
-	if( sError.size() != 0 )
+	if (sError.size() != 0)
 		return;
 
-	int iGot = f.Seek( iOffset );
-	if( iGot == iOffset )
+	int iGot = f.Seek(iOffset);
+	if (iGot == iOffset)
 		return;
-	if( iGot == -1 )
+	if (iGot == -1)
 		sError = f.GetError();
-	else if( iGot < iOffset )
+	else if (iGot < iOffset)
 		sError = "Unexpected end of file";
 }
 
-uint8_t FileReading::read_8( RageFileBasic &f, RString &sError )
+uint8_t FileReading::read_8(RageFileBasic& f, RString& sError)
 {
 	uint8_t val;
-	ReadBytes( f, &val, sizeof(uint8_t), sError );
-	if( sError.size() == 0 )
+	ReadBytes(f, &val, sizeof(uint8_t), sError);
+	if (sError.size() == 0)
 		return val;
 	else
 		return 0;
 }
 
-uint16_t FileReading::read_u16_le( RageFileBasic &f, RString &sError )
+uint16_t FileReading::read_u16_le(RageFileBasic& f, RString& sError)
 {
 	uint16_t val;
-	ReadBytes( f, &val, sizeof(uint16_t), sError );
-	if( sError.size() == 0 )
-		return Swap16LE( val );
+	ReadBytes(f, &val, sizeof(uint16_t), sError);
+	if (sError.size() == 0)
+		return Swap16LE(val);
 	else
 		return 0;
 }
 
-int16_t FileReading::read_16_le( RageFileBasic &f, RString &sError )
+int16_t FileReading::read_16_le(RageFileBasic& f, RString& sError)
 {
 	int16_t val;
-	ReadBytes( f, &val, sizeof(int16_t), sError );
-	if( sError.size() == 0 )
-		return Swap16LE( val );
+	ReadBytes(f, &val, sizeof(int16_t), sError);
+	if (sError.size() == 0)
+		return Swap16LE(val);
 	else
 		return 0;
 }
 
-uint32_t FileReading::read_u32_le( RageFileBasic &f, RString &sError )
+uint32_t FileReading::read_u32_le(RageFileBasic& f, RString& sError)
 {
 	uint32_t val;
-	ReadBytes( f, &val, sizeof(uint32_t), sError );
-	if( sError.size() == 0 )
-		return Swap32LE( val );
+	ReadBytes(f, &val, sizeof(uint32_t), sError);
+	if (sError.size() == 0)
+		return Swap32LE(val);
 	else
 		return 0;
 }
 
-int32_t FileReading::read_32_le( RageFileBasic &f, RString &sError )
+int32_t FileReading::read_32_le(RageFileBasic& f, RString& sError)
 {
 	int32_t val;
-	ReadBytes( f, &val, sizeof(int32_t), sError );
-	if( sError.size() == 0 )
-		return Swap32LE( val );
+	ReadBytes(f, &val, sizeof(int32_t), sError);
+	if (sError.size() == 0)
+		return Swap32LE(val);
 	else
 		return 0;
 }
 
-// lua start
 #include "LuaBinding.h"
 
-class LunaRageFile: public Luna<RageFile>
+class LunaRageFile : public Luna<RageFile>
 {
 public:
-	static int destroy( T* p, lua_State *L )
+	static int destroy(T* p, lua_State* L)
 	{
 		SAFE_DELETE(p);
 		return 1;
 	}
 
-	static int Open( T* p, lua_State *L )
+	static int Open(T* p, lua_State* L)
 	{
-		lua_pushboolean( L, p->Open( SArg(1), IArg(2) ) );
+		lua_pushboolean(L, p->Open(SArg(1), IArg(2)));
 		return 1;
 	}
 
-	static int Close( T* p, lua_State *L )
+	static int Close(T* p, lua_State* L)
 	{
 		p->Close();
 		return 1;
 	}
 
-	static int Write( T* p, lua_State *L )
-	{
-		lua_pushinteger( L, p->Write( SArg(1) ) );
-		return 1;
-	}
-
-	static int Read( T* p, lua_State *L )
+	static int Read(T* p, lua_State* L)
 	{
 		RString string;
 		p->Read(string);
-		lua_pushstring( L, string );
+		lua_pushstring(L, string);
 		return 1;
 	}
 
-	static int Seek( T* p, lua_State *L )
+	static int Seek(T* p, lua_State* L)
 	{
-		lua_pushinteger( L, p->Seek( IArg(1) ) );
+		lua_pushinteger(L, p->Seek(IArg(1)));
 		return 1;
 	}
 
-	static int GetLine( T* p, lua_State *L )
+	static int GetLine(T* p, lua_State* L)
 	{
 		RString string;
 		p->GetLine(string);
-		lua_pushstring( L, string );
+		lua_pushstring(L, string);
 		return 1;
 	}
 
-	static int PutLine( T* p, lua_State *L )
+	static int PutLine(T* p, lua_State* L)
 	{
-		lua_pushinteger( L, p->PutLine( SArg(1) ) );
+		lua_pushinteger(L, p->PutLine(SArg(1)));
 		return 1;
 	}
 
-	static int GetError( T* p, lua_State *L )
+	static int GetError(T* p, lua_State* L)
 	{
 		lua_pushstring( L, p->GetError() );
 		return 1;
 	}
 
-	LunaRageFile() 
+	LunaRageFile()
 	{
-		ADD_METHOD( Open );
-		ADD_METHOD( Close );
-		ADD_METHOD( Write );
-		ADD_METHOD( Read );
-		ADD_METHOD( Seek );
-		ADD_METHOD( GetLine );
-		ADD_METHOD( PutLine );
-		ADD_METHOD( GetError );
-		ADD_METHOD( destroy );
+		ADD_METHOD(Open);
+		ADD_METHOD(Close);
+		ADD_METHOD(Write);
+		ADD_METHOD(Read);
+		ADD_METHOD(Seek);
+		ADD_METHOD(GetLine);
+		ADD_METHOD(PutLine);
+		ADD_METHOD(GetError);
+		ADD_METHOD(destroy);
 	}
 };
 
-LUA_REGISTER_CLASS( RageFile )
+LUA_REGISTER_CLASS(RageFile)
 
 namespace RageFileUtil
 {
-	int CreateRageFile( lua_State *L )
+	int CreateRageFile(lua_State* L)
 	{
-		RageFile *pFile = new RageFile;
-		pFile->PushSelf( L );
+		RageFile* pFile = new RageFile;
+		pFile->PushSelf(L);
 		return 1;
 	}
-	const luaL_Reg RageFileUtilTable[] =
-	{
-		LIST_METHOD( CreateRageFile ),
-		{ NULL, NULL }
-	};
-	LUA_REGISTER_NAMESPACE( RageFileUtil );
-}
 
-/*
- * Copyright (c) 2003-2004 Glenn Maynard, Chris Danford
- * All rights reserved.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, and/or sell copies of the Software, and to permit persons to
- * whom the Software is furnished to do so, provided that the above
- * copyright notice(s) and this permission notice appear in all copies of
- * the Software and that both the above copyright notice(s) and this
- * permission notice appear in supporting documentation.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF
- * THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS
- * INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT
- * OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
- * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
- * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
- */
+	const luaL_Reg RageFileUtilTable[] = 
+	{
+		LIST_METHOD(CreateRageFile),
+		{NULL, NULL}
+	};
+
+	LUA_REGISTER_NAMESPACE(RageFileUtil);
+}
